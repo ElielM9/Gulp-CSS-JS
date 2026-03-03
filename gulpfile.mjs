@@ -1,29 +1,31 @@
 /* Importar funciones de gulp */
-const { src, dest, watch, parallel } = require(`gulp`);
+import gulp from "gulp";
+const { src, dest, watch, parallel } = gulp;
 
 //Plugins HTML
-const htmlMin = require("gulp-htmlmin"); // Minifica HTML
+import htmlMin from "gulp-htmlmin"; // Minifica HTML
 
 //Plugins para CSS
-const autoprefixer = require(`autoprefixer`);
-const cssnano = require(`cssnano`);
-const postcss = require(`gulp-postcss`);
-const clean = require(`gulp-purgecss`); //Limpia estilos CSS no usados
+import postcss from "gulp-postcss"; // Procesa CSS con PostCSS
+import autoprefixer from "autoprefixer"; // Agrega prefijos de proveedores a las reglas de CSS
+import cssnano from "cssnano"; // Minifica CSS
+import clean from "gulp-purgecss"; // Limpia estilos CSS no usados
 
 // Plugins para JS
-const terser = require(`gulp-terser-js`);
+import terser from "gulp-terser-js"; // Minifica JavaScript
+// import babel from "gulp-babel"; // Transpila JavaScript con Babel (OPCIONAL)
 
 //Plugins para imágenes
-const imgMin = require(`gulp-imagemin`); //Optimiza imágenes
-const cache = require(`gulp-cache`);
-const webp = require(`gulp-webp`);
-const avif = require(`gulp-avif`);
+import imgMin from "gulp-imagemin"; // Optimiza imágenes
+import cache from "gulp-cache"; // Cachea imágenes optimizadas para evitar procesar las mismas imágenes varias veces
+import webp from "gulp-webp"; // Convierte imágenes a formato WebP
+import avif from "gulp-avif"; // Convierte imágenes a formato AVIF
 
-//Plugins extra
-const plumber = require(`gulp-plumber`);
-const concat = require(`gulp-concat`); // Concatena ficheros
-const cacheBust = require(`gulp-cache-bust`);
-const sourcemaps = require(`gulp-sourcemaps`);
+// Plugins extra
+import plumber from "gulp-plumber"; // Maneja errores sin detener el proceso de Gulp
+import concat from "gulp-concat"; // Concatena archivos en uno solo
+import cacheBust from "gulp-cache-bust"; // Agrega una marca de tiempo a los archivos para evitar problemas de caché
+import sourcemaps from "gulp-sourcemaps"; // Genera sourcemaps para facilitar la depuración de código minificado
 
 // Funciones
 
@@ -31,7 +33,7 @@ const sourcemaps = require(`gulp-sourcemaps`);
  * Toma todos los archivos HTML en la carpeta `src/views`, las minimiza, agrega una marca de tiempo al nombre del archivo, y los envía a la carpeta `public`
  * @param done - Esta es una función callback que le dice a gulp cuando la tarea se completó.
  */
-function html(done) {
+export function html(done) {
   const options = {
     collapseWhitespace: true,
     removeComments: true,
@@ -55,7 +57,7 @@ function html(done) {
  * Toma todos los archivos CSS en la carpetasrc/styles, los concatena en un solo archivo styles.css, agrega prefijos de proveedores  a las reglas de CSS, minifica, y escribe un sourcemap en la carpeta public/styles
  * @param done - Es una función callback que indica a gulp cuando la tarea terminó.
  */
-function css(done) {
+export function css(done) {
   src(`src/styles/**/*.css`)
     .pipe(sourcemaps.init())
     .pipe(plumber())
@@ -71,7 +73,7 @@ function css(done) {
  * Esta función limpia los estilos que no se usan
  * @param done - Es una función callback que indica a gulp cuando la tarea terminó.
  */
-function cleanCSS(done) {
+export function cleanCSS(done) {
   const content = {
     content: [`public/*.html`],
   };
@@ -86,10 +88,15 @@ function cleanCSS(done) {
 /** JS
  * Minifica y genera sourcemaps para todos los archivos JS en `src/js` y los pasa a `public/js`.
  */
-function javaScript(done) {
+export function javaScript(done) {
+  /*   const options = {
+    presets: ["@babel/preset-env"],
+  }; */
+
   src(`src/js/**/*.js`)
     .pipe(sourcemaps.init())
     .pipe(plumber())
+    //.pipe(babel(options))
     .pipe(terser())
     .pipe(sourcemaps.write())
     .pipe(dest(`public/js`));
@@ -101,7 +108,7 @@ function javaScript(done) {
  * Toma las imágenes en la carpeta `src/assets/img`, los optimiza, y las guarda en la carpeta `public/assets/img`
  * @param done - Indica a gulp cuando una tarea terminó.
  */
-function img(done) {
+export function img(done) {
   const options = {
     optimizationLevel: 3,
   };
@@ -118,7 +125,7 @@ function img(done) {
  * Toma las imágenes en la carpeta `src/assets/img`, los convierte al formato Webp, y las guarda en la carpeta `public/assets/img`
  * @param done - Indica a gulp cuando una tarea terminó.
  */
-function vWebp(done) {
+export function vWebp(done) {
   const options = {
     quality: 50,
   };
@@ -135,7 +142,7 @@ function vWebp(done) {
  * Toma las imágenes en la carpeta `src/assets/img`, los convierte al formato AVIF, y las guarda en la carpeta `public/assets/img`
  * @param done - Indica a gulp cuando una tarea terminó.
  */
-function vAvif(done) {
+export function vAvif(done) {
   const options = {
     quality: 50,
   };
@@ -152,7 +159,7 @@ function vAvif(done) {
  * Observa los cambios en el HTML, CSS y las imágenes y corre las tareas respectivas para ejecutar los cambios detectados.
  * @param done - Es una función callback que indica a gulp cuando la tarea terminó.
  */
-function dev(done) {
+export function dev(done) {
   watch(`src/views/**/*.html`, html);
   watch(`src/styles/**/*.css`, css);
   watch(`src/js/**/*.js`, javaScript);
@@ -162,11 +169,4 @@ function dev(done) {
 }
 
 /* Exporta las funciones que se utilizan en el gulpfile.js */
-exports.html = html;
-exports.css = css;
-exports.clean = cleanCSS;
-exports.js = javaScript;
-exports.img = img;
-exports.vWebp = vWebp;
-exports.vAvif = vAvif;
-exports.dev = parallel(img, vWebp, vAvif, dev);
+export default parallel(img, vWebp, vAvif, dev);

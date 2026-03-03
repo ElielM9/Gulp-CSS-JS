@@ -79,8 +79,12 @@ img {
   height: auto;
 }
 
-[class$="__contenedor"] {
+[class$="__container"] {
   width: 95%;
   max-width: 120rem;
   margin: 0 auto;
+}
+
+[class$="__heading"] {
+  margin: 2rem 0;
 }
