@@ -39,7 +39,7 @@ npm i --save-dev gulp-purgecss ##Limpiar el CSS que no se usa.
 
 ### JavaScript 
 ```bash
-npm i --save-dev gulp-terser-js ##Minifica el codigo JS
+npm i --save-dev gulp-terser ##Minifica el codigo JS
 npm i --save-dev gulp-babel @babel/core @babel/preset-env ##Transpilar JS (OPCIONAL)
 ```
 
@@ -59,4 +59,5 @@ npm i --save-dev gulp-plumber ##Evita que se detenga la ejecución al presentar 
 npm i --save-dev gulp-concat ##Une todos nuestros archivos en uno solo.
 npm i --save-dev gulp-cache-bust ##Limpia la caché
 npm i --save-dev gulp-sourcemaps 
+npm i --save-dev browser-sync ## Crea un servidor de desarrollo
 ```

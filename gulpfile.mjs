@@ -1,6 +1,6 @@
 /* Importar funciones de gulp */
 import gulp from "gulp";
-const { src, dest, watch, parallel } = gulp;
+const { src, dest, watch, parallel, series } = gulp;
 
 //Plugins HTML
 import htmlMin from "gulp-htmlmin"; // Minifica HTML
@@ -12,7 +12,7 @@ import cssnano from "cssnano"; // Minifica CSS
 import clean from "gulp-purgecss"; // Limpia estilos CSS no usados
 
 // Plugins para JS
-import terser from "gulp-terser-js"; // Minifica JavaScript
+import terser from "gulp-terser"; // Minifica JavaScript
 // import babel from "gulp-babel"; // Transpila JavaScript con Babel (OPCIONAL)
 
 //Plugins para imágenes
@@ -26,8 +26,21 @@ import plumber from "gulp-plumber"; // Maneja errores sin detener el proceso de 
 import concat from "gulp-concat"; // Concatena archivos en uno solo
 import cacheBust from "gulp-cache-bust"; // Agrega una marca de tiempo a los archivos para evitar problemas de caché
 import sourcemaps from "gulp-sourcemaps"; // Genera sourcemaps para facilitar la depuración de código minificado
+import browserSync from "browser-sync"; // Crea un servidor de desarrollo y recarga el navegador automáticamente cuando los archivos cambian
+
+const bs = browserSync.create(); // Crea una instancia de BrowserSync
 
 // Funciones
+
+export function browserServer(done) {
+  bs.init({
+    server: {
+      baseDir: "./public",
+    },
+  });
+
+  done();
+}
 
 /** HTML
  * Toma todos los archivos HTML en la carpeta `src/views`, las minimiza, agrega una marca de tiempo al nombre del archivo, y los envía a la carpeta `public`
@@ -48,7 +61,8 @@ export function html(done) {
     .pipe(htmlMin(options))
     .pipe(cacheBust(cache))
     .pipe(sourcemaps.write(`.`))
-    .pipe(dest("public/"));
+    .pipe(dest("public/"))
+    .pipe(bs.stream()); // Recarga el navegador automáticamente cuando los archivos HTML cambian
 
   done();
 }
@@ -64,7 +78,8 @@ export function css(done) {
     .pipe(concat(`styles.css`))
     .pipe(postcss([autoprefixer(), cssnano()]))
     .pipe(sourcemaps.write(`.`))
-    .pipe(dest(`public/styles`));
+    .pipe(dest(`public/styles`))
+    .pipe(bs.stream()); // Recarga el navegador automáticamente cuando los archivos CSS cambian
 
   done();
 }
@@ -98,8 +113,9 @@ export function javaScript(done) {
     .pipe(plumber())
     //.pipe(babel(options))
     .pipe(terser())
-    .pipe(sourcemaps.write())
-    .pipe(dest(`public/js`));
+    .pipe(sourcemaps.write(`.`))
+    .pipe(dest(`public/js`))
+    .pipe(bs.stream()); // Recarga el navegador automáticamente cuando los archivos JS cambian
 
   done();
 }
@@ -160,13 +176,21 @@ export function vAvif(done) {
  * @param done - Es una función callback que indica a gulp cuando la tarea terminó.
  */
 export function dev(done) {
-  watch(`src/views/**/*.html`, html);
-  watch(`src/styles/**/*.css`, css);
+  watch(`src/views/**/*.html`, series(html, cleanCSS));
+  watch(`src/styles/**/*.css`, series(css, cleanCSS));
   watch(`src/js/**/*.js`, javaScript);
-  watch(`src/assets/img/**/*.{png,jpg,svg}`, img);
+  watch(`src/assets/img/**/*.{png,jpg,svg}`, parallel(img, vWebp, vAvif));
 
   done();
 }
 
-/* Exporta las funciones que se utilizan en el gulpfile.js */
-export default parallel(img, vWebp, vAvif, dev);
+/* Exportaciones finales */
+
+// La tarea `build` corre las tareas de HTML, CSS, JS, y optimización de imágenes en paralelo, y luego corre la tarea de limpieza de CSS después de que todas las tareas anteriores hayan terminado.
+export const build = series(
+  parallel(html, css, javaScript, img, vWebp, vAvif),
+  cleanCSS,
+);
+
+// La tarea `default` corre la tarea de construcción y luego inicia el servidor de desarrollo y el observador de archivos en paralelo.
+export default series(build, parallel(browserServer, dev));
