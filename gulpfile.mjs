@@ -80,6 +80,7 @@ export function styles(done) {
       keyframes: true, // Mantiene las animaciones CSS
       variables: true, // Mantiene las variables CSS
     },
+    defaultExtractor: (content) => content.match(/[\w-/:]+(?<!:)/g) || [], // Extrae clases, IDs, y otros selectores de los archivos HTML y JS
   };
 
   const cssPlugins = [autoprefixer(), purgecss(purgeOptions), cssnano()];
