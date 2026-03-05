@@ -55,13 +55,13 @@ export function html(done) {
     type: `timestamp`,
   };
 
-  src("src/views/**/*.html")
+  src(`src/views/**/*.html`)
     .pipe(sourcemaps.init())
     .pipe(plumber())
     .pipe(htmlMin(options))
     .pipe(cacheBust(cache))
     .pipe(sourcemaps.write(`.`))
-    .pipe(dest("public/"))
+    .pipe(dest(`public/`))
     .pipe(bs.stream()); // Recarga el navegador automáticamente cuando los archivos HTML cambian
 
   done();
@@ -72,30 +72,19 @@ export function html(done) {
  * @param done - Es una función callback que indica a gulp cuando la tarea terminó.
  */
 export function css(done) {
+  const purgeOptions = {
+    content: [`src/views/**/*.html`, `src/js/**/*.js`],
+  };
+
   src(`src/styles/**/*.css`)
-    .pipe(sourcemaps.init())
     .pipe(plumber())
     .pipe(concat(`styles.css`))
+    .pipe(clean(purgeOptions))
+    .pipe(sourcemaps.init())
     .pipe(postcss([autoprefixer(), cssnano()]))
     .pipe(sourcemaps.write(`.`))
     .pipe(dest(`public/styles`))
     .pipe(bs.stream()); // Recarga el navegador automáticamente cuando los archivos CSS cambian
-
-  done();
-}
-
-/**
- * Esta función limpia los estilos que no se usan
- * @param done - Es una función callback que indica a gulp cuando la tarea terminó.
- */
-export function cleanCSS(done) {
-  const content = {
-    content: [`public/*.html`],
-  };
-
-  src(`public/styles/styles.css`)
-    .pipe(clean(content))
-    .pipe(dest(`public/styles`));
 
   done();
 }
@@ -175,9 +164,9 @@ export function vAvif(done) {
  * Observa los cambios en el HTML, CSS y las imágenes y corre las tareas respectivas para ejecutar los cambios detectados.
  * @param done - Es una función callback que indica a gulp cuando la tarea terminó.
  */
-export function dev(done) {
-  watch(`src/views/**/*.html`, series(html, cleanCSS));
-  watch(`src/styles/**/*.css`, series(css, cleanCSS));
+export function watchers(done) {
+  watch(`src/views/**/*.html`, html);
+  watch(`src/styles/**/*.css`, css);
   watch(`src/js/**/*.js`, javaScript);
   watch(`src/assets/img/**/*.{png,jpg,svg}`, parallel(img, vWebp, vAvif));
 
@@ -187,10 +176,7 @@ export function dev(done) {
 /* Exportaciones finales */
 
 // La tarea `build` corre las tareas de HTML, CSS, JS, y optimización de imágenes en paralelo, y luego corre la tarea de limpieza de CSS después de que todas las tareas anteriores hayan terminado.
-export const build = series(
-  parallel(html, css, javaScript, img, vWebp, vAvif),
-  cleanCSS,
-);
+export const build = series(parallel(html, javaScript, img, vWebp, vAvif), css);
 
 // La tarea `default` corre la tarea de construcción y luego inicia el servidor de desarrollo y el observador de archivos en paralelo.
-export default series(build, parallel(browserServer, dev));
+export default series(build, parallel(browserServer, watchers));
