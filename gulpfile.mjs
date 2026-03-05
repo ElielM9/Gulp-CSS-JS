@@ -8,8 +8,8 @@ import htmlMin from "gulp-htmlmin"; // Minifica HTML
 //Plugins para CSS
 import postcss from "gulp-postcss"; // Procesa CSS con PostCSS
 import autoprefixer from "autoprefixer"; // Agrega prefijos de proveedores a las reglas de CSS
+import purgecss from "@fullhuman/postcss-purgecss"; // Limpia estilos CSS no usados
 import cssnano from "cssnano"; // Minifica CSS
-import clean from "gulp-purgecss"; // Limpia estilos CSS no usados
 
 // Plugins para JS
 import terser from "gulp-terser"; // Minifica JavaScript
@@ -32,6 +32,10 @@ const bs = browserSync.create(); // Crea una instancia de BrowserSync
 
 // Funciones
 
+/** Browser Server
+ * Inicia un servidor de desarrollo con BrowserSync que sirve los archivos desde la carpeta `public` y recarga el navegador automáticamente cuando los archivos cambian.
+ * @param done - Es una función callback que indica a gulp cuando la tarea terminó.
+ */
 export function browserServer(done) {
   bs.init({
     server: {
@@ -51,16 +55,14 @@ export function html(done) {
     collapseWhitespace: true,
     removeComments: true,
   };
-  const cache = {
+  const cacheOptions = {
     type: `timestamp`,
   };
 
   src(`src/views/**/*.html`)
-    .pipe(sourcemaps.init())
     .pipe(plumber())
     .pipe(htmlMin(options))
-    .pipe(cacheBust(cache))
-    .pipe(sourcemaps.write(`.`))
+    .pipe(cacheBust(cacheOptions))
     .pipe(dest(`public/`))
     .pipe(bs.stream()); // Recarga el navegador automáticamente cuando los archivos HTML cambian
 
@@ -71,17 +73,22 @@ export function html(done) {
  * Toma todos los archivos CSS en la carpetasrc/styles, los concatena en un solo archivo styles.css, agrega prefijos de proveedores  a las reglas de CSS, minifica, y escribe un sourcemap en la carpeta public/styles
  * @param done - Es una función callback que indica a gulp cuando la tarea terminó.
  */
-export function css(done) {
+export function styles(done) {
   const purgeOptions = {
     content: [`src/views/**/*.html`, `src/js/**/*.js`],
+    safelist: {
+      keyframes: true, // Mantiene las animaciones CSS
+      variables: true, // Mantiene las variables CSS
+    },
   };
 
+  const cssPlugins = [autoprefixer(), purgecss(purgeOptions), cssnano()];
+
   src(`src/styles/**/*.css`)
+    .pipe(sourcemaps.init())
     .pipe(plumber())
     .pipe(concat(`styles.css`))
-    .pipe(clean(purgeOptions))
-    .pipe(sourcemaps.init())
-    .pipe(postcss([autoprefixer(), cssnano()]))
+    .pipe(postcss(cssPlugins))
     .pipe(sourcemaps.write(`.`))
     .pipe(dest(`public/styles`))
     .pipe(bs.stream()); // Recarga el navegador automáticamente cuando los archivos CSS cambian
@@ -92,7 +99,7 @@ export function css(done) {
 /** JS
  * Minifica y genera sourcemaps para todos los archivos JS en `src/js` y los pasa a `public/js`.
  */
-export function javaScript(done) {
+export function js(done) {
   /*   const options = {
     presets: ["@babel/preset-env"],
   }; */
@@ -166,8 +173,8 @@ export function vAvif(done) {
  */
 export function watchers(done) {
   watch(`src/views/**/*.html`, html);
-  watch(`src/styles/**/*.css`, css);
-  watch(`src/js/**/*.js`, javaScript);
+  watch(`src/styles/**/*.css`, styles);
+  watch(`src/js/**/*.js`, js);
   watch(`src/assets/img/**/*.{png,jpg,svg}`, parallel(img, vWebp, vAvif));
 
   done();
@@ -176,7 +183,7 @@ export function watchers(done) {
 /* Exportaciones finales */
 
 // La tarea `build` corre las tareas de HTML, CSS, JS, y optimización de imágenes en paralelo, y luego corre la tarea de limpieza de CSS después de que todas las tareas anteriores hayan terminado.
-export const build = series(parallel(html, javaScript, img, vWebp, vAvif), css);
+export const build = series(parallel(html, styles, js, img, vWebp, vAvif));
 
 // La tarea `default` corre la tarea de construcción y luego inicia el servidor de desarrollo y el observador de archivos en paralelo.
 export default series(build, parallel(browserServer, watchers));

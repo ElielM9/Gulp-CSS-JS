@@ -6,12 +6,13 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "gulp", 
+    "dev": "gulp",
     "build": "gulp build"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@fullhuman/postcss-purgecss": "^8.0.0",
     "autoprefixer": "^10.4.27",
     "browser-sync": "^3.0.4",
     "cssnano": "^7.1.2",
@@ -24,7 +25,6 @@
     "gulp-imagemin": "^7.1.0",
     "gulp-plumber": "^1.2.1",
     "gulp-postcss": "^10.0.0",
-    "gulp-purgecss": "^8.0.0",
     "gulp-sourcemaps": "^3.0.0",
     "gulp-terser": "^2.1.0",
     "gulp-webp": "^5.1.0"

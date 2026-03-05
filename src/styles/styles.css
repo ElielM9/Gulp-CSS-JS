@@ -89,14 +89,22 @@ img {
   margin: 2rem 0;
 }
 
-.rojo{
+.rojo {
   color: red;
 }
 
-.amarillo{
+.amarillo {
   color: yellow;
 }
 
-.verde{
+.verde {
   color: green;
+}
+
+.azul {
+  color: blue;
+}
+
+.purpura {
+  color: purple;
 }

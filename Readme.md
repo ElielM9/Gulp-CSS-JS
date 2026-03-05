@@ -33,8 +33,7 @@ npm install --save gulp-htmlmin ##Minifica y limpia nuestro HTML
 #### CSS
 
 ```bash
-npm i --save-dev gulp-postcss cssnano autoprefixer
-npm i --save-dev gulp-purgecss ##Limpiar el CSS que no se usa.
+npm i --save-dev gulp-postcss autoprefixer @fullhuman/postcss-purgecss cssnano ## Procesa todos los estilos, los limpia y minifica
 ```
 
 ### JavaScript 
